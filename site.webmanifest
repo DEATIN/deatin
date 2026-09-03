@@ -1,0 +1,10 @@
+{
+  "name": "Алексей Курносов — архитектор цифровых продуктов",
+  "short_name": "DEATIN",
+  "description": "Архитектура enterprise-систем, интеграций и цифровых продуктов.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07101c",
+  "theme_color": "#07101c",
+  "icons": [{"src":"assets/favicon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
