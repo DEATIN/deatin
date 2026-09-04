@@ -10,10 +10,10 @@ permissions:
 
 jobs:
   runner-check:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Runner is available
         run: |
-          echo "GitHub Actions runner is available"
+          echo "Self-hosted GitHub Actions runner is available"
           echo "Repository: $GITHUB_REPOSITORY"
           echo "Commit: $GITHUB_SHA"
