@@ -1,14 +1,45 @@
 (() => {
   'use strict';
 
+  // Storage can be disabled by the browser; all controls still work in memory.
+  const sessionPreferences = new Map();
+  const storage = {
+    get(key) {
+      try { return window.localStorage.getItem(key) ?? sessionPreferences.get(key) ?? null; }
+      catch { return sessionPreferences.get(key) ?? null; }
+    },
+    set(key, value) {
+      sessionPreferences.set(key, value);
+      try { window.localStorage.setItem(key, value); } catch { /* Keep the current page usable. */ }
+    }
+  };
+  const themeButton = document.querySelector('[data-theme-toggle]');
+  let theme = storage.get('deatin-theme') === 'light' ? 'light' : 'dark';
+  const applyTheme = () => {
+    const isLight = theme === 'light';
+    document.documentElement.dataset.theme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isLight ? '#f4f7f8' : '#07101c');
+    themeButton?.setAttribute('aria-pressed', String(isLight));
+    themeButton?.setAttribute('aria-label', isLight ? 'Включить тёмную тему' : 'Включить светлую тему');
+    const icon = themeButton?.querySelector('[data-theme-icon]');
+    if (icon) icon.textContent = isLight ? '☾' : '☀';
+  };
+  applyTheme();
+  themeButton?.addEventListener('click', () => {
+    theme = theme === 'dark' ? 'light' : 'dark';
+    applyTheme();
+    storage.set('deatin-theme', theme);
+  });
+
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const finePointer = window.matchMedia('(hover: hover) and (pointer: fine)');
   const motionButton = document.querySelector('[data-motion]');
-  const savedMotion = localStorage.getItem('deatin-motion');
+  const savedMotion = storage.get('deatin-motion');
   let motionEnabled = !reducedMotion.matches && savedMotion !== 'off';
 
   const setMotionUI = () => {
     document.documentElement.classList.toggle('motion-off', !motionEnabled);
+    document.dispatchEvent(new CustomEvent('deatin:motionchange', { detail: { enabled: motionEnabled } }));
     if (!motionButton) return;
     motionButton.setAttribute('aria-pressed', String(motionEnabled));
     motionButton.setAttribute('aria-label', motionEnabled ? 'Отключить анимацию' : 'Включить анимацию');
@@ -26,21 +57,60 @@
 
   const menuButton = document.querySelector('[data-menu]');
   const nav = document.querySelector('[data-nav]');
-  const setMenu = (open) => {
+  const mobileMenu = window.matchMedia('(max-width: 800px)');
+  const setMenu = (open, restoreFocus = false) => {
     if (!menuButton || !nav) return;
     menuButton.setAttribute('aria-expanded', String(open));
     menuButton.setAttribute('aria-label', open ? 'Закрыть меню' : 'Открыть меню');
     nav.classList.toggle('open', open);
+    if (open && mobileMenu.matches) nav.querySelector('a')?.focus();
+    if (!open && restoreFocus) menuButton.focus();
   };
   menuButton?.addEventListener('click', () => setMenu(menuButton.getAttribute('aria-expanded') !== 'true'));
-  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+  nav?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+    const wasOpen = nav.classList.contains('open');
+    setMenu(false);
+    const href = link.getAttribute('href');
+    if (!wasOpen || !href?.startsWith('#')) return;
+    const target = document.getElementById(href.slice(1));
+    if (target) {
+      target.setAttribute('tabindex', '-1');
+      target.focus({ preventScroll: true });
+    }
+  }));
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') setMenu(false);
+    if (event.key === 'Escape' && nav?.classList.contains('open')) {
+      event.preventDefault();
+      setMenu(false, true);
+    }
   });
   document.addEventListener('pointerdown', (event) => {
     if (!nav?.classList.contains('open')) return;
     if (!nav.contains(event.target) && !menuButton?.contains(event.target)) setMenu(false);
   });
+  nav?.addEventListener('focusout', (event) => {
+    if (mobileMenu.matches && event.relatedTarget && !nav.contains(event.relatedTarget) && event.relatedTarget !== menuButton) setMenu(false);
+  });
+  mobileMenu.addEventListener?.('change', () => setMenu(false));
+
+  const projectFilters = [...document.querySelectorAll('[data-project-filter]')];
+  const projectCards = [...document.querySelectorAll('[data-category]')];
+  const projectGrid = document.getElementById('project-list');
+  const projectCount = document.querySelector('[data-project-count]');
+  projectFilters.forEach((button) => button.addEventListener('click', () => {
+    const category = button.dataset.projectFilter;
+    let count = 0;
+    projectCards.forEach((card) => {
+      card.hidden = category !== 'all' && card.dataset.category !== category;
+      if (!card.hidden) {
+        count += 1;
+        card.classList.add('visible');
+      }
+    });
+    projectFilters.forEach((filter) => filter.setAttribute('aria-pressed', String(filter === button)));
+    projectGrid?.classList.toggle('is-filtered', category !== 'all');
+    if (projectCount) projectCount.textContent = `Показано проектов: ${count}`;
+  }));
 
   const revealNodes = [...document.querySelectorAll('.reveal')];
   if ('IntersectionObserver' in window && !reducedMotion.matches) {
@@ -298,7 +368,7 @@
 
   motionButton?.addEventListener('click', () => {
     motionEnabled = !motionEnabled;
-    localStorage.setItem('deatin-motion', motionEnabled ? 'on' : 'off');
+    storage.set('deatin-motion', motionEnabled ? 'on' : 'off');
     setMotionUI();
     neural?.setEnabled(motionEnabled);
     startRotator();
@@ -309,7 +379,7 @@
 
   reducedMotion.addEventListener?.('change', (event) => {
     if (event.matches) motionEnabled = false;
-    else motionEnabled = localStorage.getItem('deatin-motion') !== 'off';
+    else motionEnabled = storage.get('deatin-motion') !== 'off';
     setMotionUI();
     neural?.setEnabled(motionEnabled);
     startRotator();

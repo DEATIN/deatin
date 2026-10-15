@@ -24,7 +24,7 @@
     node.addEventListener('click', () => {
       const target = document.querySelector(`[data-partner-card="${node.dataset.partner}"]`);
       setActive(node.dataset.partner);
-      target?.scrollIntoView({ behavior: reduced.matches ? 'auto' : 'smooth', block: 'center' });
+      target?.scrollIntoView({ behavior: reduced.matches || document.documentElement.classList.contains('motion-off') ? 'auto' : 'smooth', block: 'center' });
     });
   });
 
@@ -50,13 +50,14 @@
       this.resizeObserver.observe(scene);
       this.resize();
       this.bind();
-      if (!reduced.matches) this.start();
+      if (!reduced.matches && !document.documentElement.classList.contains('motion-off')) this.start();
       else this.draw(performance.now());
     }
 
     bind() {
       if (finePointer.matches) {
         this.scene.addEventListener('pointermove', (event) => {
+          if (document.documentElement.classList.contains('motion-off')) return;
           const rect = this.scene.getBoundingClientRect();
           this.pointer.x = event.clientX - rect.left;
           this.pointer.y = event.clientY - rect.top;
@@ -72,7 +73,17 @@
           this.hub.style.transform = '';
         });
       }
-      reduced.addEventListener?.('change', (event) => event.matches ? this.stop() : this.start());
+      const updateMotion = () => {
+        const enabled = !reduced.matches && !document.documentElement.classList.contains('motion-off');
+        if (enabled) this.start();
+        else {
+          this.pointer.active = false;
+          this.hub.style.transform = '';
+          this.stop();
+        }
+      };
+      reduced.addEventListener?.('change', updateMotion);
+      document.addEventListener('deatin:motionchange', updateMotion);
     }
 
     resize() {
@@ -191,7 +202,7 @@
   const wipe = document.querySelector('[data-page-wipe]');
   document.querySelectorAll('a[href]').forEach((link) => {
     link.addEventListener('click', (event) => {
-      if (reduced.matches || !wipe || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (reduced.matches || document.documentElement.classList.contains('motion-off') || !wipe || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
       const href = link.getAttribute('href');
       if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('http')) return;
       event.preventDefault();

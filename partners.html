@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#07101c">
-  <meta name="color-scheme" content="dark">
+  <meta name="color-scheme" content="dark light">
   <title>Партнёры — Алексей Курносов</title>
   <meta name="description" content="Партнёры и компании профессионального контура Алексея Курносова: Газпром, Газпром нефть, Яндекс и Керама Марацци.">
   <meta property="og:type" content="website">
@@ -33,16 +33,17 @@
       <a class="logo" href="index.html" aria-label="DEATIN — на главную">
         <span class="logo-mark">D</span><span>DEATIN</span>
       </a>
-      <nav class="nav" data-nav aria-label="Основная навигация">
+      <nav class="nav" id="main-navigation" data-nav aria-label="Основная навигация">
         <a href="index.html#about">Обо мне</a>
-        <a href="index.html#expertise">Экспертиза</a>
+        <a href="index.html#expertise">Опыт и навыки</a>
         <a href="index.html#projects">Проекты</a>
         <a class="active" href="partners.html">Партнёры</a>
         <a href="index.html#contact">Контакты</a>
       </nav>
       <div class="header-tools">
+        <button class="theme-switch" type="button" data-theme-toggle aria-pressed="false" aria-label="Включить светлую тему"><span data-theme-icon aria-hidden="true">☀</span><span>Тема</span></button>
         <button class="motion-switch" type="button" data-motion aria-pressed="true" aria-label="Отключить анимацию"><i></i><span>motion</span></button>
-        <button class="menu" type="button" data-menu aria-expanded="false" aria-label="Открыть меню"><i></i><i></i></button>
+        <button class="menu" type="button" data-menu aria-controls="main-navigation" aria-expanded="false" aria-label="Открыть меню"><i></i><i></i></button>
       </div>
     </div>
   </header>
@@ -143,7 +144,7 @@
     </section>
   </main>
 
-  <footer><div class="shell footer-inner"><a class="logo" href="index.html"><span class="logo-mark">D</span><span>Алексей Курносов</span></a><p>Партнёры · Архитектура · Интеграции</p><p>© <span data-year></span></p></div></footer>
+  <footer><div class="shell footer-inner"><a class="logo" href="index.html"><span class="logo-mark">D</span><span>Алексей Курносов</span></a><p>Партнёры · Архитектура · Интеграции</p><p>© <span data-year></span></p></div><p class="shell footer-credit">Создано с помощью ChatGPT · JavaScript: темы, меню и интерактивная карта.</p></footer>
   <noscript><div class="noscript">Содержимое доступно без JavaScript, но интерактивная карта партнёров будет отключена.</div></noscript>
 </body>
 </html>
